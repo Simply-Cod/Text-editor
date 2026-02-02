@@ -3,6 +3,7 @@
 #include "terminal.h"
 #include "input.h"
 #include "readAndWrite.h"
+#include "bufferInfo.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -13,14 +14,12 @@
 
 Terminal term;
 Buffer buff;
+BufferInfo bInfo;
 
 int main(int argc, char *argv[]) {
     bool quit = false;
     unsigned int ch = 0;
-    enum InputMode inputMode = NORMAL;
-    char *fName;
-    bool havefName = false;
-    bool fIsDirty = false;
+    infoInit(&bInfo);
 
     if (!TerminalEnableRaw(&term))exit(1);
 
@@ -30,10 +29,15 @@ int main(int argc, char *argv[]) {
     LineBuffer *currentLine = buff.head;
     // either read or create new buffer
     if (argc > 1) {
-        if (loadFile(&buff, argv[1])) {
-            fName = malloc(sizeof(char) * strlen(argv[1]));
+        bInfo.fileName = malloc(sizeof(char) * strlen(argv[1]) + 1);
+        if (bInfo.fileName) {
+            strncpy(bInfo.fileName, argv[1], strlen(argv[1]));
+            bInfo.fileName[strlen(argv[1]) + 1] = '\0';
+            bInfo.hasFileName = true;
+        } 
 
-            if (fName) havefName = true;
+        if (loadFile(&buff, bInfo.fileName)) {
+
         }
     } else {
         currentLine->buffer[0] = '\0';
@@ -49,7 +53,7 @@ int main(int argc, char *argv[]) {
 
         ch = readInput();
 
-        if (inputMode == NORMAL) {
+        if (bInfo.mode == NORMAL) {
 
             switch (ch) {
                 case 0:
@@ -64,12 +68,12 @@ int main(int argc, char *argv[]) {
                     quit = true;
                     break;
                 case 'i':
-                    inputMode = INSERT;
+                    bInfo.mode = INSERT;
                     lineMoveCursorLeft(currentLine);
                     write(STDOUT_FILENO, "\x1b[6 q", 5);
                     break;
                 case 'a':
-                    inputMode = INSERT;
+                    bInfo.mode = INSERT;
                     write(STDOUT_FILENO, "\x1b[6 q", 5);
                     break;
                 case UP:
@@ -95,12 +99,12 @@ int main(int argc, char *argv[]) {
                 case 'o':
                     bufferAddLineBelow(&buff, currentLine);
                     currentLine = currentLine->next;
-                    inputMode = INSERT;
+                    bInfo.mode = INSERT;
                     break;
                 case 'O':
                     bufferAddLineAbove(&buff, currentLine);
                     currentLine = currentLine->previous;
-                    inputMode = INSERT;
+                    bInfo.mode = INSERT;
                     break;
                 case ':':
                     int cmd = getCommand();
@@ -110,9 +114,14 @@ int main(int argc, char *argv[]) {
                             quit = true;
                             break;
                         case 2001:
-                            if (havefName) {
-                                writeFile(&buff, fName);
-                                fIsDirty = false;
+                            if (bInfo.hasFileName) {
+                                writeFile(&buff, bInfo.fileName);
+                                bInfo.buffIsDirty = false;
+                            } else {
+                              if (getFileName(&bInfo)) {
+                                  writeFile(&buff, bInfo.fileName);
+                                  bInfo.buffIsDirty = false;
+                              }
                             }
                             break;
                         default:
@@ -123,13 +132,13 @@ int main(int argc, char *argv[]) {
                     break;
             }
 
-        } else if (inputMode == INSERT) {
+        } else if (bInfo.mode == INSERT) {
 
             switch (ch) {
                 case 0:
                     break;
                 case ESC:
-                    inputMode = NORMAL;
+                    bInfo.mode = NORMAL;
                     write(STDOUT_FILENO, "\x1b[2 q", 5); // Block
                     break;
 
@@ -137,7 +146,7 @@ int main(int argc, char *argv[]) {
                 // =========================================
                 case 13:
                     bufferAddLineBelow(&buff, currentLine);
-                    fIsDirty = true;
+                    bInfo.buffIsDirty = true;
 
                     if (currentLine->next == NULL) break;
 
@@ -163,14 +172,14 @@ int main(int argc, char *argv[]) {
                     for (int i = 0; i < 4; i++) {
                         lineInser1Byte(currentLine, ' ');
                     }
-                    fIsDirty = true;
+                    bInfo.buffIsDirty = true;
                     break;
 
                 // Ascii printable (1 byte)
                 // =========================================
                 case 32 ... 126:
                     lineInser1Byte(currentLine, ch);
-                    fIsDirty = true;
+                    bInfo.buffIsDirty = true;
                     break;
                 /*----------------------------------------*/
 
@@ -194,7 +203,7 @@ int main(int argc, char *argv[]) {
                     } else {
                         lineRemoveChar(currentLine);
                     }
-                    fIsDirty = true;
+                    bInfo.buffIsDirty = true;
                     break;
                 /*----------------------------------------*/
 
@@ -207,7 +216,7 @@ int main(int argc, char *argv[]) {
                     if (read(STDIN_FILENO, &seq[1], 1) == 0) break;
 
                     lineInsert2Bytes(currentLine, seq[0], seq[1]);
-                    fIsDirty = true;
+                    bInfo.buffIsDirty = true;
                     break;
                 /*----------------------------------------*/
 
@@ -235,7 +244,7 @@ int main(int argc, char *argv[]) {
         } // Insert mode end
         // Draw
         // ===============================================
-        renderDraw(&buff, currentLine, inputMode, fIsDirty);
+        renderDraw(&buff, currentLine, &bInfo);
 
         fflush(stdout);
         /*-----------------------------------------------*/
@@ -243,6 +252,7 @@ int main(int argc, char *argv[]) {
 
 
     write(STDOUT_FILENO, "\x1b[H\x1b[2J", 7);
+    free(bInfo.fileName);
     bufferFree(&buff);
     TerminalDisableRaw(&term);
     return 0;

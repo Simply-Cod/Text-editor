@@ -7,10 +7,5 @@
 #define RIGHT   1002
 #define LEFT    1003
 
-enum InputMode {
-    NORMAL,
-    INSERT,
-};
-
 unsigned int readInput();
 int getCommand();

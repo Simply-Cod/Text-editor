@@ -1,6 +1,7 @@
 #include "render.h"
 #include "buffer.h"
 #include "input.h"
+#include "bufferInfo.h"
 #include <asm-generic/ioctls.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -22,7 +23,7 @@ Vector2 renderGetTerminalSize() {
     return termSize;
 }
 
-int renderDraw(Buffer *buffer, LineBuffer *currentLine, enum InputMode mode, bool fIsDirty) {
+int renderDraw(Buffer *buffer, LineBuffer *currentLine, BufferInfo *bInfo) {
 
     Vector2 termSize = renderGetTerminalSize();
     if (termSize.x == 0) return 0;
@@ -50,12 +51,14 @@ int renderDraw(Buffer *buffer, LineBuffer *currentLine, enum InputMode mode, boo
 
     // Draw Status Bar
     printf("-- %s MODE\x1b[0m -- Line: %d, Col: %d",
-            (mode == INSERT ? "\x1b[41mINSERT" : "\x1b[44mNORMAL"), targetRow + 1, lineGetVisualCursorPos(currentLine));
-    if (fIsDirty) {
-        printf("\t[+]");
+            (bInfo->mode == INSERT ? "\x1b[41mINSERT" : "\x1b[44mNORMAL"), targetRow + 1, lineGetVisualCursorPos(currentLine));
+    if (bInfo->buffIsDirty) {
+        printf("\t%s [+]", bInfo->hasFileName ? bInfo->fileName : "<no name>");
+    } else {
+        printf("\t%s", bInfo->hasFileName ? bInfo->fileName : "<no name>");
     }
 
     // Set cursor
-    printf("\x1b[%d;%dH", targetRow + 1, lineGetVisualCursorPos(currentLine) + (mode == INSERT ? 6 : 5));
+    printf("\x1b[%d;%dH", targetRow + 1, lineGetVisualCursorPos(currentLine) + (bInfo->mode == INSERT ? 6 : 5));
     return 1;
 }
