@@ -2,6 +2,7 @@
 #include "render.h"
 #include "terminal.h"
 #include "input.h"
+#include "readAndWrite.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -12,7 +13,7 @@
 Terminal term;
 Buffer buff;
 
-int main() {
+int main(int argc, char *argv[]) {
     bool quit = false;
     unsigned int ch = 0;
     enum InputMode inputMode = NORMAL;
@@ -20,14 +21,18 @@ int main() {
     if (!TerminalEnableRaw(&term))exit(1);
 
     bufferInit(&buff);
-
-    // either read or create new buffer
     bufferCreateFirstLine(&buff);
-    //=================================
+
     LineBuffer *currentLine = buff.head;
+    // either read or create new buffer
+    if (argc > 1) {
+        loadFile(&buff, argv[1]);
+    } else {
+        currentLine->buffer[0] = '\0';
+        currentLine->lineLength = 0;
+    }
     currentLine->cursorPosition = 0;
-    currentLine->lineLength = 0;
-    currentLine->buffer[0] = '\0';
+    //=================================
 
 
     // Main loop
