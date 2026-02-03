@@ -15,11 +15,15 @@
 Terminal term;
 Buffer buff;
 BufferInfo bInfo;
+ViewPort viewPort;
 
 int main(int argc, char *argv[]) {
     bool quit = false;
     unsigned int ch = 0;
     infoInit(&bInfo);
+    viewPort.height = 0;
+    viewPort.topLine = 0;
+    viewPort.cursorRow = 0;
 
     if (!TerminalEnableRaw(&term))exit(1);
 
@@ -70,11 +74,9 @@ int main(int argc, char *argv[]) {
                 case 'i':
                     bInfo.mode = INSERT;
                     lineMoveCursorLeft(currentLine);
-                    write(STDOUT_FILENO, "\x1b[6 q", 5);
                     break;
                 case 'a':
                     bInfo.mode = INSERT;
-                    write(STDOUT_FILENO, "\x1b[6 q", 5);
                     break;
                 case UP:
                 case 'k':
@@ -139,7 +141,6 @@ int main(int argc, char *argv[]) {
                     break;
                 case ESC:
                     bInfo.mode = NORMAL;
-                    write(STDOUT_FILENO, "\x1b[2 q", 5); // Block
                     break;
 
                 // Enter
@@ -247,9 +248,18 @@ int main(int argc, char *argv[]) {
 
         // Draw
         // ===============================================
-        renderDraw(&buff, currentLine, &bInfo);
 
-        fflush(stdout);
+        // Cursor look
+
+            if (bInfo.mode == NORMAL) {
+                write(STDOUT_FILENO, "\x1b[2 q", 5); // Block
+            } else if (bInfo.mode == INSERT) {
+                write(STDOUT_FILENO, "\x1b[6 q", 5); // I 
+            }
+
+            renderDraw(&buff, currentLine, &bInfo, &viewPort);
+
+            fflush(stdout);
         /*-----------------------------------------------*/
     }
 

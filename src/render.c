@@ -23,20 +23,47 @@ Vector2 renderGetTerminalSize() {
     return termSize;
 }
 
-int renderDraw(Buffer *buffer, LineBuffer *currentLine, BufferInfo *bInfo) {
-
+static int updateViewPort(ViewPort *viewPort, BufferInfo *info, LineBuffer *line) {
     Vector2 termSize = renderGetTerminalSize();
-    if (termSize.x == 0) return 0;
+    if (termSize.x == 0 || termSize.y == 0) return 0;
+
+    viewPort->height = termSize.y - 2;
+
+    if (info->currentLineNumb <= viewPort->topLine) {
+        viewPort->topLine = info->currentLineNumb - 1;
+    } else if (info->currentLineNumb >= viewPort->topLine + viewPort->height) {
+        viewPort->topLine = info->currentLineNumb - viewPort->height;
+    }
+    viewPort->cursorRow = info->currentLineNumb - viewPort->topLine;
+    viewPort->cursorCol = lineGetVisualCursorPos(line);
+
+    return 1;
+}
+
+int renderDraw(Buffer *buffer, LineBuffer *currentLine, BufferInfo *bInfo, ViewPort *viewPort) {
+
+
+    if (!updateViewPort(viewPort, bInfo, currentLine)) return 0;
+
 
     write(STDOUT_FILENO, "\x1b[H\x1b[2J", 7); // Move to beginning and clear
 
     LineBuffer *printPtr = buffer->head;
 
+    int index = 0;
+    if (viewPort->topLine >= 1) {
 
-    for (int i = 0; i < termSize.y - 2; i++) {
+        while (printPtr != NULL && index < viewPort->topLine) {
+            printPtr = printPtr->next;
+            index++;
+        }
+    }
+
+
+    for (int i = 0; i < viewPort->height; i++) {
 
         if (printPtr != NULL) {
-            printf("%3d  %s\x1b[1E", i + 1, printPtr->buffer);
+            printf("%3d  %s\x1b[1E", (index + i) + 1, printPtr->buffer);
             printPtr = printPtr->next;
         } else {
             printf("~\x1b[1E");
@@ -45,15 +72,15 @@ int renderDraw(Buffer *buffer, LineBuffer *currentLine, BufferInfo *bInfo) {
 
     // Draw Status Bar
     printf("-- %s MODE\x1b[0m -- Line: %d, Col: %d",
-            (bInfo->mode == INSERT ? "\x1b[41mINSERT" : "\x1b[44mNORMAL"), bInfo->currentLineNumb, lineGetVisualCursorPos(currentLine));
+            (bInfo->mode == INSERT ? "\x1b[41mINSERT" : "\x1b[44mNORMAL"), bInfo->currentLineNumb, viewPort->cursorCol);
     if (bInfo->buffIsDirty) {
         printf("\t%s [+]", bInfo->hasFileName ? bInfo->fileName : "<no name>");
     } else {
         printf("\t%s", bInfo->hasFileName ? bInfo->fileName : "<no name>");
     }
-    printf("\t Total length: %d Line number: %d", bInfo->bufferLength, bInfo->currentLineNumb);
+    printf("\t viewPort top line: %d", viewPort->topLine);
 
     // Set cursor
-    printf("\x1b[%d;%dH", bInfo->currentLineNumb, lineGetVisualCursorPos(currentLine) + (bInfo->mode == INSERT ? 6 : 5));
+    printf("\x1b[%d;%dH", viewPort->cursorRow, viewPort->cursorCol + (bInfo->mode == INSERT ? 6 : 5));
     return 1;
 }

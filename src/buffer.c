@@ -123,7 +123,6 @@ void bufferFree(Buffer *buffer) {
 
 // Line Functions
 
-// returns the new visualCursor Position
 int lineInser1Byte(LineBuffer *current, char c) {
 
     if (current->lineLength >= MAX_LINE_LENGTH - 1) return 0;
@@ -135,7 +134,7 @@ int lineInser1Byte(LineBuffer *current, char c) {
     current->cursorPosition++;
     current->buffer[current->lineLength] = '\0';
 
-    return lineGetVisualCursorPos(current);
+    return 1;
 }
 
 int lineInsert2Bytes(LineBuffer *current, char c1, char c2) {
@@ -150,7 +149,7 @@ int lineInsert2Bytes(LineBuffer *current, char c1, char c2) {
     current->cursorPosition += 2;
     current->buffer[current->lineLength] = '\0';
 
-    return lineGetVisualCursorPos(current);
+    return 1;
 }
 
 int lineRemoveChar(LineBuffer *current) {
@@ -179,12 +178,15 @@ int lineMoveCursorLeft(LineBuffer *line) {
 
     line->cursorPosition--;
     for (;;) {
+
+        if (line->cursorPosition <= 0) break;
+
         if ((unsigned char)line->buffer[line->cursorPosition] >= 128 && (unsigned char)line->buffer[line->cursorPosition] <= 191 && line->cursorPosition != 0)
             line->cursorPosition--;
         else
             break;
     }
-    return lineGetVisualCursorPos(line);
+    return 1;
 }
 
 int lineMoveCursorRight(LineBuffer *line) {
@@ -201,7 +203,7 @@ int lineMoveCursorRight(LineBuffer *line) {
         else
             break;
     }
-    return lineGetVisualCursorPos(line);
+    return 1;
 }
 
 int lineMoveCursorUp(LineBuffer *line) {
@@ -210,7 +212,7 @@ int lineMoveCursorUp(LineBuffer *line) {
     line = line->previous;
     line->cursorPosition = line->lineLength;
 
-    return lineGetVisualCursorPos(line);
+    return 1;
 }
 
 int lineMoveCursorDown(LineBuffer *line) {
@@ -223,13 +225,13 @@ int lineMoveCursorDown(LineBuffer *line) {
         line->cursorPosition = line->lineLength;
     }
 
-    return lineGetVisualCursorPos(line);
+    return 1;
 }
 
 int lineGetVisualCursorPos(LineBuffer *line) {
     int visualCur = line->cursorPosition;
 
-    for (int i = visualCur; i > 0; i--) {
+    for (int i = line->cursorPosition; i > 0; i--) {
 
         if ((unsigned char)line->buffer[i] >= 128 && (unsigned char)line->buffer[i] <= 191)
             visualCur--;

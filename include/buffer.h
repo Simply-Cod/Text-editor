@@ -29,11 +29,9 @@ int lineMoveCursorUp(LineBuffer *line);
 int lineMoveCursorDown(LineBuffer *line);
 
 // inserts a char at the cursor position
-// returns the visual cursor position
 int lineInser1Byte(LineBuffer *current, char c);
 
 // Inserts 2 byte characters
-// returns the visual cursor position
 int lineInsert2Bytes(LineBuffer *current, char c1, char c2);
 
 

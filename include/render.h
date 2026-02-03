@@ -8,8 +8,15 @@ typedef struct Vector2{
     int y;
 }Vector2;
 
+typedef struct ViewPort {
+    int height;
+    int topLine;
+    int cursorRow;
+    int cursorCol;
+}ViewPort;
+
 
 Vector2 renderGetTerminalSize();
 
 
-int renderDraw(Buffer *buffer, LineBuffer *currentLine, BufferInfo *bInfo);
+int renderDraw(Buffer *buffer, LineBuffer *currentLine, BufferInfo *bInfo, ViewPort *ViewPort);
