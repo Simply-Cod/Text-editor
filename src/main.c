@@ -5,6 +5,7 @@
 #include "readAndWrite.h"
 #include "bufferInfo.h"
 #include "motions.h"
+#include "cursor.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -119,32 +120,14 @@ int main(int argc, char *argv[]) {
                     if (currentLine->previous == NULL) break;
 
                     currentLine = currentLine->previous;
-
-                    if (prefCurPos > currentLine->lineLength) {
-                        if (currentLine->lineLength > 0)
-                            currentLine->cursorPosition = currentLine->lineLength - 1;
-                        else
-                            currentLine->cursorPosition = 0;
-                    }
-                    else {
-                        currentLine->cursorPosition = prefCurPos;
-                    }
+                    correctCursorPos(currentLine, &prefCurPos);
                     break;
                 case DOWN:
                 case 'j':
                     if (currentLine->next == NULL) break;
 
                     currentLine = currentLine->next;
-
-                    if (prefCurPos > currentLine->lineLength) {
-                        if (currentLine->lineLength > 0)
-                            currentLine->cursorPosition = currentLine->lineLength - 1;
-                        else
-                            currentLine->cursorPosition = 0;
-                    }
-                    else {
-                        currentLine->cursorPosition = prefCurPos;
-                    }
+                    correctCursorPos(currentLine, &prefCurPos);
                     break;
                 case RIGHT:
                 case 'l':
@@ -286,31 +269,13 @@ int main(int argc, char *argv[]) {
                     if (currentLine->previous == NULL) break;
 
                     currentLine = currentLine->previous;
-
-                    if (prefCurPos > currentLine->lineLength) {
-                        if (currentLine->lineLength > 0)
-                            currentLine->cursorPosition = currentLine->lineLength - 1;
-                        else
-                            currentLine->cursorPosition = 0;
-                    }
-                    else {
-                        currentLine->cursorPosition = prefCurPos;
-                    }
+                    correctCursorPos(currentLine, &prefCurPos);
                     break;
                 case DOWN:
                     if (currentLine->next == NULL) break;
 
                     currentLine = currentLine->next;
-
-                    if (prefCurPos > currentLine->lineLength) {
-                        if (currentLine->lineLength > 0)
-                            currentLine->cursorPosition = currentLine->lineLength - 1;
-                        else
-                            currentLine->cursorPosition = 0;
-                    }
-                    else {
-                        currentLine->cursorPosition = prefCurPos;
-                    }
+                    correctCursorPos(currentLine, &prefCurPos);
                     break;
                 case RIGHT:
                     lineMoveCursorRight(currentLine);
