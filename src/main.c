@@ -4,6 +4,7 @@
 #include "input.h"
 #include "readAndWrite.h"
 #include "bufferInfo.h"
+#include "motions.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -62,6 +63,9 @@ int main(int argc, char *argv[]) {
 
         ch = readInput();
 
+        // if (currentLine->lineLength > 0 && currentLine->cursorPosition == 0)
+        //     currentLine->cursorPosition = 1;
+
         if (bInfo.mode == NORMAL) {
 
             switch (ch) {
@@ -72,7 +76,9 @@ int main(int argc, char *argv[]) {
                     prefCurPos = 0;
                     break;
                 case '$':
-                    currentLine->cursorPosition = currentLine->lineLength;
+                    if (currentLine->lineLength > 0)
+                        currentLine->cursorPosition = currentLine->lineLength - 1;
+
                     prefCurPos = currentLine->lineLength;
                     break;
                 case 17: // Ctrl-Q
@@ -80,12 +86,22 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'i':
                     bInfo.mode = INSERT;
-                    lineMoveCursorLeft(currentLine);
                     prefCurPos = currentLine->cursorPosition;
                     break;
                 case 'a':
+                    if (currentLine->cursorPosition < currentLine->lineLength) {
+                        if ((unsigned char)currentLine->buffer[currentLine->cursorPosition] >= 192) {
+                            currentLine->cursorPosition += 2;
+                        } else {
+                            currentLine->cursorPosition++;
+                        }
+                    }
                     bInfo.mode = INSERT;
                     prefCurPos = currentLine->cursorPosition;
+                    break;
+                case 'x':
+                    if (currentLine->lineLength > 0)
+                        motion_x_RemoveChar(currentLine);
                     break;
                 case UP:
                 case 'k':
@@ -93,24 +109,35 @@ int main(int argc, char *argv[]) {
 
                     currentLine = currentLine->previous;
 
-                    if (prefCurPos > currentLine->lineLength)
-                        currentLine->cursorPosition = currentLine->lineLength;
-                    else
+                    if (prefCurPos > currentLine->lineLength) {
+                        if (currentLine->lineLength > 0)
+                            currentLine->cursorPosition = currentLine->lineLength--;
+                        else
+                            currentLine->cursorPosition = 0;
+                    }
+                    else {
                         currentLine->cursorPosition = prefCurPos;
+                    }
                     break;
                 case DOWN:
                 case 'j':
                     if (currentLine->next == NULL) break;
 
                     currentLine = currentLine->next;
-                    if (prefCurPos > currentLine->lineLength)
-                        currentLine->cursorPosition = currentLine->lineLength;
-                    else
+
+                    if (prefCurPos > currentLine->lineLength) {
+                        if (currentLine->lineLength > 0)
+                            currentLine->cursorPosition = currentLine->lineLength--;
+                        else
+                            currentLine->cursorPosition = 0;
+                    }
+                    else {
                         currentLine->cursorPosition = prefCurPos;
+                    }
                     break;
                 case RIGHT:
                 case 'l':
-                    lineMoveCursorRight(currentLine);
+                        lineMoveCursorRight(currentLine);
 
                     if (prefCurPos != currentLine->cursorPosition)
                         prefCurPos = currentLine->cursorPosition;
@@ -164,6 +191,7 @@ int main(int argc, char *argv[]) {
                     break;
                 case ESC:
                     bInfo.mode = NORMAL;
+                    lineMoveCursorLeft(currentLine);
                     break;
 
                 // Enter
@@ -251,19 +279,31 @@ int main(int argc, char *argv[]) {
                     if (currentLine->previous == NULL) break;
 
                     currentLine = currentLine->previous;
-                    if (prefCurPos > currentLine->lineLength)
-                        currentLine->cursorPosition = currentLine->lineLength;
-                    else
+
+                    if (prefCurPos > currentLine->lineLength) {
+                        if (currentLine->lineLength > 0)
+                            currentLine->cursorPosition = currentLine->lineLength--;
+                        else
+                            currentLine->cursorPosition = 0;
+                    }
+                    else {
                         currentLine->cursorPosition = prefCurPos;
+                    }
                     break;
                 case DOWN:
                     if (currentLine->next == NULL) break;
 
                     currentLine = currentLine->next;
-                    if (prefCurPos > currentLine->lineLength)
-                        currentLine->cursorPosition = currentLine->lineLength;
-                    else
+
+                    if (prefCurPos > currentLine->lineLength) {
+                        if (currentLine->lineLength > 0)
+                            currentLine->cursorPosition = currentLine->lineLength--;
+                        else
+                            currentLine->cursorPosition = 0;
+                    }
+                    else {
                         currentLine->cursorPosition = prefCurPos;
+                    }
                     break;
                 case RIGHT:
                     lineMoveCursorRight(currentLine);

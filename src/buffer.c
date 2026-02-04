@@ -159,20 +159,25 @@ int lineInsert2Bytes(LineBuffer *current, char c1, char c2) {
 }
 
 int lineRemoveChar(LineBuffer *current) {
-    if (current->lineLength <= 0) return 0;
+    if (current->lineLength <= 0 || current->cursorPosition <= 0) return 0;
 
     if ((unsigned char)current->buffer[current->cursorPosition - 1] >= 128 && (unsigned char)current->buffer[current->cursorPosition - 1] <= 191) {
 
-        memmove(&current->buffer[current->cursorPosition - 2], &current->buffer[current->cursorPosition], current->lineLength - current->cursorPosition);
-        current->lineLength -= 2;
-        current->cursorPosition -= 2;
+        int step = (current->cursorPosition >= 2) ? 2 : 1;
+        memmove(&current->buffer[current->cursorPosition - step],
+                &current->buffer[current->cursorPosition],
+                current->lineLength - current->cursorPosition + 1);
+        current->lineLength -= step;
+        current->cursorPosition -= step;
         current->buffer[current->lineLength] = '\0';
     } else {
-        memmove(&current->buffer[current->cursorPosition - 1], &current->buffer[current->cursorPosition], current->lineLength - current->cursorPosition);
+        memmove(&current->buffer[current->cursorPosition - 1],
+                &current->buffer[current->cursorPosition],
+                current->lineLength - current->cursorPosition + 1);
         current->lineLength--;
         current->cursorPosition--;
-        current->buffer[current->lineLength] = '\0';
     }
+    current->buffer[current->lineLength] = '\0';
     return 1;
 }
 
@@ -196,26 +201,24 @@ int lineMoveCursorLeft(LineBuffer *line) {
 }
 
 int lineMoveCursorRight(LineBuffer *line) {
-    if (line->buffer[line->cursorPosition] == '\0')
-        return line->cursorPosition;
+    if (line->lineLength <= 0 || line->cursorPosition >= line->lineLength - 1)
+        return 0;
 
     line->cursorPosition++;
-    for (;;) {
-
-        if (line->buffer[line->cursorPosition] == '\0') break;
-
-        if ((unsigned char)line->buffer[line->cursorPosition] >= 128 && (unsigned char)line->buffer[line->cursorPosition] <= 191)
-            line->cursorPosition++;
-        else
-            break;
+    while (line->cursorPosition < line->lineLength &&
+            (unsigned char)line->buffer[line->cursorPosition] >= 128 &&
+            (unsigned char)line->buffer[line->cursorPosition] <= 191) {
+        line->cursorPosition++;
     }
-    return 1;
+    if (line->cursorPosition >= line->lineLength && line->lineLength > 0) {
+        lineMoveCursorLeft(line);
+    }
+        return 1;
 }
 
 int lineMoveCursorUp(LineBuffer *line) {
     if (line->previous == NULL) return lineGetVisualCursorPos(line);
 
-    line = line->previous;
     line->cursorPosition = line->lineLength;
 
     return 1;
@@ -235,12 +238,14 @@ int lineMoveCursorDown(LineBuffer *line) {
 }
 
 int lineGetVisualCursorPos(LineBuffer *line) {
-    int visualCur = line->cursorPosition;
+    int visualCur = 0;
 
-    for (int i = line->cursorPosition; i > 0; i--) {
+    for (int i = 0; i < line->cursorPosition; i++) {
+        unsigned char c = (unsigned char)line->buffer[i];
 
-        if ((unsigned char)line->buffer[i] >= 128 && (unsigned char)line->buffer[i] <= 191)
-            visualCur--;
+        if (c < 128 || c >= 192) {
+            visualCur++;
+        }
     }
     return visualCur;
 }

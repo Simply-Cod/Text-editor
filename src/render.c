@@ -78,9 +78,10 @@ int renderDraw(Buffer *buffer, LineBuffer *currentLine, BufferInfo *bInfo, ViewP
     } else {
         printf("\t%s", bInfo->hasFileName ? bInfo->fileName : "<no name>");
     }
-    printf("\t viewPort top line: %d", viewPort->topLine);
+    // printf("arr cur position: %d, char under cursor: %c", currentLine->cursorPosition, currentLine->buffer[currentLine->cursorPosition]);
 
+    int offset = 6;
     // Set cursor
-    printf("\x1b[%d;%dH", viewPort->cursorRow, viewPort->cursorCol + (bInfo->mode == INSERT ? 6 : 5));
+    printf("\x1b[%d;%dH", viewPort->cursorRow, viewPort->cursorCol + offset);
     return 1;
 }
