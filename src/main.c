@@ -63,8 +63,6 @@ int main(int argc, char *argv[]) {
 
         ch = readInput();
 
-        // if (currentLine->lineLength > 0 && currentLine->cursorPosition == 0)
-        //     currentLine->cursorPosition = 1;
 
         if (bInfo.mode == NORMAL) {
 
@@ -162,10 +160,10 @@ int main(int argc, char *argv[]) {
                     int cmd = getCommand();
 
                     switch (cmd) {
-                        case 2000:
+                        case CMD_QUIT:
                             quit = true;
                             break;
-                        case 2001:
+                        case CMD_WRITE:
                             if (bInfo.hasFileName) {
                                 writeFile(&buff, bInfo.fileName);
                                 bInfo.buffIsDirty = false;
@@ -194,9 +192,7 @@ int main(int argc, char *argv[]) {
                     lineMoveCursorLeft(currentLine);
                     break;
 
-                // Enter
-                // =========================================
-                case 13:
+                case ENTER:
                     bufferAddLineBelow(&buff, currentLine);
                     bInfo.buffIsDirty = true;
 
@@ -210,12 +206,8 @@ int main(int argc, char *argv[]) {
                         currentLine = currentLine->next;
                     }
                     break;
-                /*----------------------------------------*/
 
-                case 16: // Ctrl-P
-                    break;
-
-                case 17: // Ctrl-Q
+                case CTRL_Q:
                     quit = true;
                     break;
 
@@ -237,7 +229,7 @@ int main(int argc, char *argv[]) {
 
                 // Backspace
                 // ========================================
-                case 127:
+                case BACKSPACE:
                     if (currentLine->cursorPosition <= 0) {
 
                         if (currentLine->previous == NULL) break;
@@ -341,7 +333,6 @@ int main(int argc, char *argv[]) {
         /*-----------------------------------------------*/
     }
 
-    cleanup();
     return 0;
 }
 
