@@ -13,9 +13,11 @@ typedef struct BufferInfo {
     enum InputMode mode;
     bool buffIsDirty;
     bool hasFileName;
+    bool loadedFile;
     char *fileName;
 }BufferInfo;
 
 void infoInit(BufferInfo *bInfo);
 int getFileName(BufferInfo *bInfo);
 int infoGetLineNumbers(BufferInfo *info, Buffer *buffer, LineBuffer *current);
+int infoHandleArgs(BufferInfo *info, int argc, char *argv[]);

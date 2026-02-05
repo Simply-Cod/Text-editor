@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 void infoInit(BufferInfo *bInfo) {
     bInfo->bufferLength = 0;
@@ -163,4 +164,47 @@ int getFileName(BufferInfo *bInfo) {
     }
 
     return 0;
+}
+
+int infoHandleArgs(BufferInfo *info, int argc, char *argv[]) {
+
+    info->hasFileName = false;
+    info->loadedFile = false;
+    info->fileName = NULL;
+    info->buffIsDirty = false;
+    info->bufferLength = 0;
+    info->currentLineNumb = 0;
+    info->mode = NORMAL;
+    if (argc <= 1) {
+        return 1;
+    } else if (argc == 2) {
+        struct stat st;
+
+        if (stat(argv[1], &st) == 0) {
+            if (S_ISREG(st.st_mode)) { // arg is file
+                info->fileName = strndup(argv[1], strlen(argv[1]));
+                if (!info->fileName) return 0;
+                info->hasFileName = true;
+                info->loadedFile = true;
+                return 1;
+            } else if (S_ISDIR(st.st_mode)) { // arg is directory
+
+                if (chdir(argv[1]) != 0)
+                    return 0;
+                else
+                    return 1;
+            } else { // unknown
+
+            }
+        } else { // set as file name
+            info->fileName = strndup(argv[1], strlen(argv[1]));
+            if (!info->fileName) return 0;
+
+            info->hasFileName = true;
+            return 1;
+
+        }
+    }
+
+    return 1;
 }

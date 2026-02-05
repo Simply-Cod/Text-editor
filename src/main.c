@@ -39,21 +39,29 @@ int main(int argc, char *argv[]) {
 
     LineBuffer *currentLine = buff.head;
     // either read or create new buffer
-    if (argc > 1) {
-        bInfo.fileName = malloc(sizeof(char) * strlen(argv[1]) + 1);
-        if (bInfo.fileName) {
-            strncpy(bInfo.fileName, argv[1], strlen(argv[1]));
-            bInfo.fileName[strlen(argv[1]) + 1] = '\0';
-            bInfo.hasFileName = true;
-        }
+    infoHandleArgs(&bInfo, argc, argv);
 
-        if (loadFile(&buff, bInfo.fileName)) {
-
-        }
+    if (bInfo.hasFileName && bInfo.loadedFile) {
+        loadFile(&buff, bInfo.fileName);
     } else {
         currentLine->buffer[0] = '\0';
         currentLine->lineLength = 0;
     }
+    // if (argc > 1) {
+    //     bInfo.fileName = malloc(sizeof(char) * strlen(argv[1]) + 1);
+    //     if (bInfo.fileName) {
+    //         strncpy(bInfo.fileName, argv[1], strlen(argv[1]));
+    //         bInfo.fileName[strlen(argv[1]) + 1] = '\0';
+    //         bInfo.hasFileName = true;
+    //     }
+    //
+    //     if (loadFile(&buff, bInfo.fileName)) {
+    //
+    //     }
+    // } else {
+    //     currentLine->buffer[0] = '\0';
+    //     currentLine->lineLength = 0;
+    // }
     currentLine->cursorPosition = 0;
     //=================================
 

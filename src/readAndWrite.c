@@ -25,7 +25,7 @@ int loadFile(Buffer *buff, char *fName) {
     }
     fclose(file);
 
-    if (line->buffer[0] == '\0') {
+    if (line->buffer[0] == '\0' && line->previous != NULL) {
         line = line->previous;
         bufferDeleteLine(buff, line->next);
     }
