@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
     infoInit(&bInfo);
     viewPort.height = 0;
     viewPort.topLine = 0;
+    viewPort.oldTopLine = 1; // to make it draw the entire screen once at start
     viewPort.cursorRow = 0;
 
     int prefCurPos = 0;
@@ -328,14 +329,6 @@ int main(int argc, char *argv[]) {
 
         // Draw
         // ===============================================
-
-        // Cursor look
-
-        if (bInfo.mode == NORMAL) {
-            write(STDOUT_FILENO, "\x1b[2 q", 5); // Block
-        } else if (bInfo.mode == INSERT) {
-            write(STDOUT_FILENO, "\x1b[6 q", 5); // I 
-        }
 
         renderDraw(&buff, currentLine, &bInfo, &viewPort);
 
