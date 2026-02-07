@@ -38,6 +38,11 @@ static int updateViewPort(ViewPort *viewPort, BufferInfo *info, LineBuffer *line
     viewPort->cursorRow = info->currentLineNumb - viewPort->topLine;
     viewPort->cursorCol = lineGetVisualCursorPos(line);
 
+    if (viewPort->oldTopLine != viewPort->topLine) {
+        info->renderFull = true;
+        viewPort->oldTopLine = viewPort->topLine;
+    }
+
     return 1;
 }
 
@@ -55,7 +60,7 @@ int renderDraw(Buffer *buffer, LineBuffer *currentLine, BufferInfo *bInfo, ViewP
 
 
 
-    if (viewPort->topLine == viewPort->oldTopLine) { // redraw current line
+    if (!bInfo->renderFull) { // redraw current line
 
         if (printPtr != currentLine) {
             while (printPtr != currentLine && printPtr->next != NULL) {
@@ -98,7 +103,7 @@ int renderDraw(Buffer *buffer, LineBuffer *currentLine, BufferInfo *bInfo, ViewP
             }
         }
 
-        viewPort->oldTopLine = viewPort->topLine;
+        bInfo->renderFull = false;
     }
 
         char cur[32];

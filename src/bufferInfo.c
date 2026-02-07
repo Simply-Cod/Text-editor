@@ -14,6 +14,7 @@ void infoInit(BufferInfo *bInfo) {
     bInfo->mode = NORMAL;
     bInfo->buffIsDirty = false;
     bInfo->hasFileName = false;
+    bInfo->renderFull = true;
     bInfo->fileName = NULL;
 }
 

@@ -48,21 +48,6 @@ int main(int argc, char *argv[]) {
         currentLine->buffer[0] = '\0';
         currentLine->lineLength = 0;
     }
-    // if (argc > 1) {
-    //     bInfo.fileName = malloc(sizeof(char) * strlen(argv[1]) + 1);
-    //     if (bInfo.fileName) {
-    //         strncpy(bInfo.fileName, argv[1], strlen(argv[1]));
-    //         bInfo.fileName[strlen(argv[1]) + 1] = '\0';
-    //         bInfo.hasFileName = true;
-    //     }
-    //
-    //     if (loadFile(&buff, bInfo.fileName)) {
-    //
-    //     }
-    // } else {
-    //     currentLine->buffer[0] = '\0';
-    //     currentLine->lineLength = 0;
-    // }
     currentLine->cursorPosition = 0;
     //=================================
 
@@ -175,12 +160,14 @@ int main(int argc, char *argv[]) {
                     currentLine = currentLine->next;
                     prefCurPos = currentLine->cursorPosition;
                     bInfo.mode = INSERT;
+                    bInfo.renderFull = true;
                     break;
                 case 'O':
                     bufferAddLineAbove(&buff, currentLine);
                     currentLine = currentLine->previous;
                     prefCurPos = currentLine->cursorPosition;
                     bInfo.mode = INSERT;
+                    bInfo.renderFull = true;
                     break;
                 case ':':
                     int cmd = getCommand();
@@ -231,6 +218,7 @@ int main(int argc, char *argv[]) {
                         lineMoveBuffDown(currentLine, count);
                         currentLine = currentLine->next;
                     }
+                    bInfo.renderFull = true;
                     break;
 
                 case CTRL_Q:
@@ -270,6 +258,7 @@ int main(int argc, char *argv[]) {
                             bufferDeleteLine(&buff, currentLine->next);
                         }
                         prefCurPos = currentLine->cursorPosition;
+                        bInfo.renderFull = true;
 
                     } else {
                         lineRemoveChar(currentLine);

@@ -14,6 +14,7 @@ typedef struct BufferInfo {
     bool buffIsDirty;
     bool hasFileName;
     bool loadedFile;
+    bool renderFull;
     char *fileName;
 }BufferInfo;
 
